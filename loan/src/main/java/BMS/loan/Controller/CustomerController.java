@@ -68,6 +68,7 @@ public class CustomerController {
             return "CustomerUI/updateProfile";
         }
         return "redirect:/OneBank";
+
     }
 
     @PostMapping("/updateProfile")
