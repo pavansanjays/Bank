@@ -41,6 +41,7 @@ public class CustomerController {
         if(bindingResult.hasErrors())
         {
             return "CustomerUI/registerForm";
+
         }
         customerEntity.setKycStatus(CustomerEntity.KycStatus.valueOf("VERIFIED"));
         customerService.registerCustomer(customerEntity);
