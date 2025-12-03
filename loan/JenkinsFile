@@ -28,7 +28,7 @@ pipeline {
                 echo "Running unit tests"
                 dir('loan'){
                     // 3. FIX: Apply the same flag to the testing stage
-                    sh 'mvn test -Dmaven.repo.local=/m2_cache'
+                    sh 'mvn test '
                 }
             }
         }
