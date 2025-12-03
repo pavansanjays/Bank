@@ -17,7 +17,7 @@ pipeline {
                  echo "This is the building stage"
                  dir('loan'){
                      // 2. FIX: Tell Maven where the cache is mounted using -Dmaven.repo.local
-                     sh 'mvn clean install -Dmaven.repo.local=/m2_cache'
+                     sh 'mvn clean install'
                  }
             }
         }
