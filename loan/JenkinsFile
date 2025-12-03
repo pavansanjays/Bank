@@ -2,7 +2,7 @@ pipeline {
     agent {
           docker {
                 image 'maven:3.9.6-eclipse-temurin-21' // ✅ FIX: Use a stable modern JDK (e.g., JDK 21, the current LTS)
-                args '-v /root/.m2:/root/.m2'
+                args '-v /var/jenkins_home/.m2:/root/.m2'  // attach docker maven folder to jenkins workspace
           }
     }
     environment{
