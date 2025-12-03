@@ -1,25 +1,36 @@
 pipeline {
-    agent any
+    agent {
+          docker {
+                image 'maven:3.8.6-jdk-11' // <-- This environment is global
+                args '-v /root/.m2:/root/.m2'
+          }
+    }
+    environment{
+         APP_JAR='target/*.jar'
+    }
 
     stages {
-        stage('Normal Stage') {
+        stage('build Stage') {
             steps {
                 sh '''
-                 echo "this is checking stage"
+                 echo "this is building stage"
+                 sh 'mvn clean install'
                 '''
             }
         }
 
-        stage('Docker Stage') {
-            steps {
-                echo "Running inside Docker"
-            }
-        }
         stage('testing')
         {
             steps{
                 echo "this is tesing stage"
             }
+        }
+
+        stage('Archeive jar file'){
+           steps{
+              echo "this is archiveing file"
+              archiveArtifacts artifacts:APP_JAR
+           }
         }
     }
     post{
