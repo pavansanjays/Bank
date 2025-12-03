@@ -13,7 +13,7 @@ pipeline {
         stage('build Stage') {
             steps {
                  echo "this is building stage"
-                 dir(loan){  // we are saying check in loan folder i.e pom.xml
+                 dir('loan'){  // we are saying check in loan folder i.e pom.xml
                  sh 'mvn clean install'
                  }
             }
@@ -29,7 +29,7 @@ pipeline {
         stage('Archeive jar file'){
            steps{
               echo "this is archiveing file"
-              dir(loan){  // store in loan folder
+              dir('loan'){  // store in loan folder
               archiveArtifacts artifacts:APP_JAR
               }
            }
