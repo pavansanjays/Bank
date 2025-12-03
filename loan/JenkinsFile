@@ -1,7 +1,7 @@
 pipeline {
     agent {
           docker {
-                image 'maven:3.8.6-jdk-11' // <-- This environment is global
+                image 'maven:3.8.6-jdk-11'
                 args '-v /root/.m2:/root/.m2'
           }
     }
@@ -12,9 +12,9 @@ pipeline {
     stages {
         stage('build Stage') {
             steps {
-                 echo "this is building stage"
-                 dir('loan'){  // we are saying check in loan folder i.e pom.xml
-                 sh 'mvn clean install'
+                 echo "This is the building stage"
+                 dir('loan'){
+                     sh 'mvn clean install'
                  }
             }
         }
@@ -22,15 +22,19 @@ pipeline {
         stage('testing')
         {
             steps{
-                echo "this is tesing stage"
+                echo "Running unit tests"
+                // 💡 FIX: Added mvn test command
+                dir('loan'){
+                    sh 'mvn test'
+                }
             }
         }
 
-        stage('Archeive jar file'){
+        stage('Archive jar file'){
            steps{
-              echo "this is archiveing file"
-              dir('loan'){  // store in loan folder
-              archiveArtifacts artifacts:APP_JAR
+              echo "This is the archiving file stage"
+              dir('loan'){
+                  archiveArtifacts artifacts: APP_JAR
               }
            }
         }
