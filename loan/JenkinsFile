@@ -1,0 +1,30 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Normal Stage') {
+            steps {
+                sh '''
+                 echo "this is checking stage"
+                '''
+            }
+        }
+
+        stage('Docker Stage') {
+            steps {
+                echo "Running inside Docker"
+            }
+        }
+        stage('testing')
+        {
+            steps{
+                echo "this is tesing stage"
+            }
+        }
+    }
+    post{
+        always{
+            echo"always in post"
+        }
+    }
+}
