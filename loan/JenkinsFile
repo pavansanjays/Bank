@@ -1,11 +1,13 @@
 pipeline {
     agent {
           docker {
-                image 'maven:3.9.6-eclipse-temurin-21' // ✅ FIX: Use a stable modern JDK (e.g., JDK 21, the current LTS)
-                args '-v /var/jenkins_home/.m2:/m2_cache'  // attach docker maven folder to jenkins workspace
+                image 'maven:3.9.6-eclipse-temurin-21'
+                // 1. Map Jenkins cache to a unique, writable directory inside the container: /m2_cache
+                args '-v /var/jenkins_home/.m2:/m2_cache'
           }
     }
     environment{
+         // Variable for the artifact path
          APP_JAR='target/*.jar'
     }
 
@@ -14,7 +16,8 @@ pipeline {
             steps {
                  echo "This is the building stage"
                  dir('loan'){
-                     sh 'mvn clean install'
+                     // 2. FIX: Tell Maven where the cache is mounted using -Dmaven.repo.local
+                     sh 'mvn clean install -Dmaven.repo.local=/m2_cache'
                  }
             }
         }
@@ -23,9 +26,9 @@ pipeline {
         {
             steps{
                 echo "Running unit tests"
-                // 💡 FIX: Added mvn test command
                 dir('loan'){
-                    sh 'mvn test'
+                    // 3. FIX: Apply the same flag to the testing stage
+                    sh 'mvn test -Dmaven.repo.local=/m2_cache'
                 }
             }
         }
@@ -34,6 +37,7 @@ pipeline {
            steps{
               echo "This is the archiving file stage"
               dir('loan'){
+                  // The archiving step doesn't run Maven, so no flag is needed here
                   archiveArtifacts artifacts: APP_JAR
               }
            }
