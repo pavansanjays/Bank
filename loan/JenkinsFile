@@ -1,6 +1,6 @@
 pipeline {
 
-    agent none
+    agent none   // using per-stage agents
 
     environment {
         APP_JAR = 'target/*.jar'
@@ -11,13 +11,15 @@ pipeline {
             agent {
                 docker {
                     image 'maven:3.9.6-eclipse-temurin-21'
-                    args '--user=root -v /var/jenkins_home/.m2:/m2_repo'
+                    // no volume, keep it simple
+                    // args ''  // can be omitted
                 }
             }
             steps {
                 echo "This is the building stage"
                 dir('loan') {
-                    sh 'mvn -Dmaven.repo.local=/m2_repo clean install'
+                    // Use a writable folder inside the Maven container
+                    sh 'mvn -Dmaven.repo.local=/tmp/m2_repo clean install'
                 }
             }
         }
@@ -26,13 +28,13 @@ pipeline {
             agent {
                 docker {
                     image 'maven:3.9.6-eclipse-temurin-21'
-                    args '--user=root -v /var/jenkins_home/.m2:/m2_repo'
+                    // no volume
                 }
             }
             steps {
                 echo "Running unit tests"
                 dir('loan') {
-                    sh 'mvn -Dmaven.repo.local=/m2_repo test'
+                    sh 'mvn -Dmaven.repo.local=/tmp/m2_repo test'
                 }
             }
         }
