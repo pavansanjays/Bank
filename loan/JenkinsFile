@@ -1,59 +1,60 @@
 pipeline {
 
-    environment{
-         // Variable for the artifact path
-         APP_JAR='target/*.jar'
+    // Top-level agent is required in Declarative pipeline
+    agent none
+
+    environment {
+        // Variable for the artifact path (inside loan/target)
+        APP_JAR = 'target/*.jar'
     }
 
     stages {
-        stage('build Stage') {
-        agent {
-                  docker {
-                        image 'maven:3.9.6-eclipse-temurin-21'
-                        // 1. Map Jenkins cache to a unique, writable directory inside the container: /m2_cache
-                       // args '-v /var/jenkins_home/.m2:/m2_cache'
-                  }
+
+        stage('Build Stage') {
+            agent {
+                docker {
+                    image 'maven:3.9.6-eclipse-temurin-21'
+                    // if you later want maven cache, you can uncomment and adjust:
+                    // args '-v /var/jenkins_home/.m2:/m2_cache'
+                }
             }
             steps {
-                 echo "This is the building stage"
-                 dir('loan'){
-                     // 2. FIX: Tell Maven where the cache is mounted using -Dmaven.repo.local
-                     sh 'mvn clean install'
-                 }
-            }
-        }
-
-        stage('testing')
-        {
-        agent {
-                  docker {
-                        image 'maven:3.9.6-eclipse-temurin-21'
-                        // 1. Map Jenkins cache to a unique, writable directory inside the container: /m2_cache
-                       // args '-v /var/jenkins_home/.m2:/m2_cache'
-                  }
-            }
-            steps{
-                echo "Running unit tests"
-                dir('loan'){
-                    // 3. FIX: Apply the same flag to the testing stage
-                    sh 'mvn test '
+                echo "This is the building stage"
+                dir('loan') {
+                    sh 'mvn clean install'
                 }
             }
         }
 
-        stage('Archive jar file'){
-           steps{
-              echo "This is the archiving file stage"
-              dir('loan'){
-                  // The archiving step doesn't run Maven, so no flag is needed here
-                  archiveArtifacts artifacts: APP_JAR
-              }
-           }
+        stage('Testing') {
+            agent {
+                docker {
+                    image 'maven:3.9.6-eclipse-temurin-21'
+                    // args '-v /var/jenkins_home/.m2:/m2_cache'
+                }
+            }
+            steps {
+                echo "Running unit tests"
+                dir('loan') {
+                    sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Archive jar file') {
+            // No agent here -> uses the top-level "agent none", so this runs on the Jenkins controller/agent itself.
+            steps {
+                echo "This is the archiving file stage"
+                dir('loan') {
+                    archiveArtifacts artifacts: APP_JAR
+                }
+            }
         }
     }
-    post{
-        always{
-            echo"always in post"
+
+    post {
+        always {
+            echo "always in post"
         }
     }
 }
