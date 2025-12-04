@@ -1,27 +1,25 @@
 pipeline {
 
-    // Top-level agent is required in Declarative pipeline
-    agent none
+    agent none   // we use agent per stage
 
     environment {
-        // Variable for the artifact path (inside loan/target)
         APP_JAR = 'target/*.jar'
     }
 
     stages {
-
         stage('Build Stage') {
             agent {
                 docker {
                     image 'maven:3.9.6-eclipse-temurin-21'
-                    // if you later want maven cache, you can uncomment and adjust:
-                    // args '-v /var/jenkins_home/.m2:/m2_cache'
+                    // Mount a writable Maven repo directory from Jenkins home
+                    args '-v /var/jenkins_home/.m2:/m2_repo'
                 }
             }
             steps {
                 echo "This is the building stage"
                 dir('loan') {
-                    sh 'mvn clean install'
+                    // Use the mounted repo as Maven local repository
+                    sh 'mvn -Dmaven.repo.local=/m2_repo clean install'
                 }
             }
         }
@@ -30,19 +28,18 @@ pipeline {
             agent {
                 docker {
                     image 'maven:3.9.6-eclipse-temurin-21'
-                    // args '-v /var/jenkins_home/.m2:/m2_cache'
+                    args '-v /var/jenkins_home/.m2:/m2_repo'
                 }
             }
             steps {
                 echo "Running unit tests"
                 dir('loan') {
-                    sh 'mvn test'
+                    sh 'mvn -Dmaven.repo.local=/m2_repo test'
                 }
             }
         }
 
         stage('Archive jar file') {
-            // No agent here -> uses the top-level "agent none", so this runs on the Jenkins controller/agent itself.
             steps {
                 echo "This is the archiving file stage"
                 dir('loan') {
