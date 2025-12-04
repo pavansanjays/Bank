@@ -11,14 +11,12 @@ pipeline {
             agent {
                 docker {
                     image 'maven:3.9.6-eclipse-temurin-21'
-                    // Mount a writable Maven repo directory from Jenkins home
                     args '-v /var/jenkins_home/.m2:/m2_repo'
                 }
             }
             steps {
                 echo "This is the building stage"
                 dir('loan') {
-                    // Use the mounted repo as Maven local repository
                     sh 'mvn -Dmaven.repo.local=/m2_repo clean install'
                 }
             }
