@@ -1,47 +1,58 @@
 pipeline {
-    agent {
-          docker {
-                image 'maven:3.9.6-eclipse-temurin-21' // ✅ FIX: Use a stable modern JDK (e.g., JDK 21, the current LTS)
-                args '-v /var/jenkins_home/.m2:/m2_cache'  // attach docker maven folder to jenkins workspace
-          }
-    }
-    environment{
-         APP_JAR='target/*.jar'
+
+    agent none   // using per-stage agents
+
+    environment {
+        APP_JAR = 'target/*.jar'
     }
 
     stages {
-        stage('build Stage') {
-            steps {
-                 echo "This is the building stage"
-                 dir('loan'){
-                     sh 'mvn clean install'
-                 }
+        stage('Build Stage') {
+            agent {
+                docker {
+                    image 'maven:3.9.6-eclipse-temurin-21'
+                }
             }
-        }
-
-        stage('testing')
-        {
-            steps{
-                echo "Running unit tests"
-                // 💡 FIX: Added mvn test command
-                dir('loan'){
-                    sh 'mvn test'
+            steps {
+                echo "This is the building stage"
+                dir('loan') {
+                    // clean old target (just in case)
+                    sh 'rm -rf target || true'
+                    // OVERRIDE Java version here 👇
+                    sh 'mvn -Dmaven.repo.local=/tmp/m2_repo -Djava.version=21 -Dmaven.compiler.release=21 clean install'
                 }
             }
         }
 
-        stage('Archive jar file'){
-           steps{
-              echo "This is the archiving file stage"
-              dir('loan'){
-                  archiveArtifacts artifacts: APP_JAR
-              }
-           }
+        stage('Testing') {
+            agent {
+                docker {
+                    image 'maven:3.9.6-eclipse-temurin-21'
+                }
+            }
+            steps {
+                echo "Running unit tests"
+                dir('loan') {
+                    // same overrides for tests
+                    sh 'mvn -Dmaven.repo.local=/tmp/m2_repo -Djava.version=21 -Dmaven.compiler.release=21 test'
+                }
+            }
+        }
+
+        stage('Archive jar file') {
+        agent any
+            steps {
+                echo "This is the archiving file stage"
+                dir('loan') {
+                    archiveArtifacts artifacts: APP_JAR
+                }
+            }
         }
     }
-    post{
-        always{
-            echo"always in post"
+
+    post {
+        always {
+            echo "always in post"
         }
     }
 }
