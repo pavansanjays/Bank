@@ -11,14 +11,13 @@ pipeline {
             agent {
                 docker {
                     image 'maven:3.9.6-eclipse-temurin-21'
-                    // no volume, keep it simple
-                    // args ''  // can be omitted
                 }
             }
             steps {
                 echo "This is the building stage"
                 dir('loan') {
-                    // Use a writable folder inside the Maven container
+                    // Safety: delete any old target if it appears again
+                    sh 'rm -rf target || true'
                     sh 'mvn -Dmaven.repo.local=/tmp/m2_repo clean install'
                 }
             }
@@ -28,7 +27,6 @@ pipeline {
             agent {
                 docker {
                     image 'maven:3.9.6-eclipse-temurin-21'
-                    // no volume
                 }
             }
             steps {
