@@ -40,6 +40,7 @@ pipeline {
         }
 
         stage('Archive jar file') {
+        agent any
             steps {
                 echo "This is the archiving file stage"
                 dir('loan') {
