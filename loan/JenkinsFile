@@ -1,58 +1,42 @@
 pipeline {
 
-    agent none   // using per-stage agents
+    agent any   // use Jenkins container (root user)
 
     environment {
-        APP_JAR = 'target/*.jar'
+        APP_JAR = "loan/target/*.jar"   // adjust if your project path is different
     }
 
     stages {
-        stage('Build Stage') {
-            agent {
-                docker {
-                    image 'maven:3.9.6-eclipse-temurin-21'
-                }
-            }
+
+        stage('Build') {
             steps {
-                echo "This is the building stage"
+                echo "Building the project"
                 dir('loan') {
-                    // clean old target (just in case)
-                    sh 'rm -rf target || true'
-                    // OVERRIDE Java version here 👇
-                    sh 'mvn -Dmaven.repo.local=/tmp/m2_repo -Djava.version=21 -Dmaven.compiler.release=21 clean install'
+                    sh 'mvn clean install'
                 }
             }
         }
 
-        stage('Testing') {
-            agent {
-                docker {
-                    image 'maven:3.9.6-eclipse-temurin-21'
-                }
-            }
+        stage('Test') {
             steps {
-                echo "Running unit tests"
+                echo "Running tests"
                 dir('loan') {
-                    // same overrides for tests
-                    sh 'mvn -Dmaven.repo.local=/tmp/m2_repo -Djava.version=21 -Dmaven.compiler.release=21 test'
+                    sh 'mvn test'
                 }
             }
         }
 
-        stage('Archive jar file') {
-        agent any
+        stage('Archive Artifact') {
             steps {
-                echo "This is the archiving file stage"
-                dir('loan') {
-                    archiveArtifacts artifacts: APP_JAR
-                }
+                echo "Archiving JAR file"
+                archiveArtifacts artifacts: "${APP_JAR}"
             }
         }
     }
 
     post {
         always {
-            echo "always in post"
+            echo "Pipeline completed"
         }
     }
 }
