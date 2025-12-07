@@ -1,16 +1,22 @@
 pipeline {
-
-    agent any   // use Jenkins container (root user)
+    agent any   // runs in your jenkins-root container as root
 
     environment {
-        APP_JAR = "loan/target/*.jar"   // adjust if your project path is different
+        APP_JAR = 'loan/target/*.jar'
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                echo "Cloning repo from GitHub"
+                git branch: 'dev-2',
+                    url: 'https://github.com/pavansanjays/Bank.git'
+            }
+        }
 
         stage('Build') {
             steps {
-                echo "Building the project"
+                echo "Building project with Maven"
                 dir('loan') {
                     sh 'mvn clean install'
                 }
@@ -28,8 +34,8 @@ pipeline {
 
         stage('Archive Artifact') {
             steps {
-                echo "Archiving JAR file"
-                archiveArtifacts artifacts: "${APP_JAR}"
+                echo "Archiving JAR"
+                archiveArtifacts artifacts: APP_JAR
             }
         }
     }
