@@ -1,42 +1,28 @@
 pipeline {
-    // runs on your jenkins-root container
-    agent any
-
-    environment {
-        // JAR will be created under loan/target
-        APP_JAR = 'target/*.jar'
-    }
+    agent any   // Jenkins runs in jenkins-root container
 
     stages {
-
-        // Jenkins will already do "Declarative: Checkout SCM" for you
-        // because this is "Pipeline script from SCM", so no extra
-        // checkout stage is needed.
-
-        stage('Build & Test (Maven in Docker)') {
+        stage('Build & Archive (Maven in Docker)') {
             agent {
                 docker {
                     // Maven + JDK 21 image
                     image 'maven:3.9.6-eclipse-temurin-21'
-                    // optional: cache dependencies between builds
+                    // Optional: cache dependencies
                     // args '-v /var/jenkins_home/.m2:/root/.m2'
                 }
             }
             steps {
-                echo "Building & testing with Maven (JDK 21)"
+                echo "Building & archiving with Maven (JDK 21) inside Docker"
 
                 dir('loan') {
-                    // IMPORTANT: force Java 21 instead of 24
+                    // Force Java 21 instead of 24
                     sh 'mvn -B -Dmaven.compiler.release=21 clean install'
-                }
-            }
-        }
 
-        stage('Archive Artifact') {
-            steps {
-                echo "Archiving JAR"
-                dir('loan') {
-                    archiveArtifacts artifacts: APP_JAR
+                    // DEBUG (optional, just to see what is there)
+                    sh 'ls -R'
+
+                    // Archive jar while target/ definitely exists in this workspace
+                    archiveArtifacts artifacts: 'target/*.jar'
                 }
             }
         }
