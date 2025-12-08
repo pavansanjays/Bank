@@ -1,32 +1,33 @@
 pipeline {
-    // Jenkins itself (jenkins-root) is the main agent
+    // runs on your jenkins-root container
     agent any
 
     environment {
-        APP_JAR = 'loan/target/*.jar'
+        // JAR will be created under loan/target
+        APP_JAR = 'target/*.jar'
     }
 
     stages {
 
-        // Jenkins will already do "Declarative: Checkout SCM" for you automatically
-        // so we don't need our own Checkout stage.
+        // Jenkins will already do "Declarative: Checkout SCM" for you
+        // because this is "Pipeline script from SCM", so no extra
+        // checkout stage is needed.
 
         stage('Build & Test (Maven in Docker)') {
             agent {
                 docker {
-                    // Maven + JDK image
-                    image 'maven:3.9.6-eclipse-temurin-24'
+                    // Maven + JDK 21 image
+                    image 'maven:3.9.6-eclipse-temurin-21'
                     // optional: cache dependencies between builds
                     // args '-v /var/jenkins_home/.m2:/root/.m2'
                 }
             }
             steps {
-                echo "Building & testing with Maven Docker image"
+                echo "Building & testing with Maven (JDK 21)"
+
                 dir('loan') {
-                    // clean + compile + tests
-                    sh 'mvn -B clean install'
-                    // or separate:
-                    // sh 'mvn -B clean test'
+                    // IMPORTANT: force Java 21 instead of 24
+                    sh 'mvn -B -Dmaven.compiler.release=21 clean install'
                 }
             }
         }
@@ -34,7 +35,9 @@ pipeline {
         stage('Archive Artifact') {
             steps {
                 echo "Archiving JAR"
-                archiveArtifacts artifacts: APP_JAR
+                dir('loan') {
+                    archiveArtifacts artifacts: APP_JAR
+                }
             }
         }
     }
