@@ -15,7 +15,7 @@ pipeline {
             agent {
                 docker {
                     // Maven + JDK image
-                    image 'maven:3.9.6-eclipse-temurin-21'
+                    image 'maven:3.9.6-eclipse-temurin-24'
                     // optional: cache dependencies between builds
                     // args '-v /var/jenkins_home/.m2:/root/.m2'
                 }
