@@ -1,33 +1,32 @@
 pipeline {
-    agent any   // runs in your jenkins-root container as root
+    // Jenkins itself (jenkins-root) is the main agent
+    agent any
 
     environment {
         APP_JAR = 'loan/target/*.jar'
     }
 
     stages {
-        stage('Checkout') {
-            steps {
-                echo "Cloning repo from GitHub"
-                git branch: 'dev-2',
-                    url: 'https://github.com/pavansanjays/Bank.git'
-            }
-        }
 
-        stage('Build') {
-            steps {
-                echo "Building project with Maven"
-                dir('loan') {
-                    sh 'mvn clean install'
+        // Jenkins will already do "Declarative: Checkout SCM" for you automatically
+        // so we don't need our own Checkout stage.
+
+        stage('Build & Test (Maven in Docker)') {
+            agent {
+                docker {
+                    // Maven + JDK image
+                    image 'maven:3.9.6-eclipse-temurin-21'
+                    // optional: cache dependencies between builds
+                    // args '-v /var/jenkins_home/.m2:/root/.m2'
                 }
             }
-        }
-
-        stage('Test') {
             steps {
-                echo "Running tests"
+                echo "Building & testing with Maven Docker image"
                 dir('loan') {
-                    sh 'mvn test'
+                    // clean + compile + tests
+                    sh 'mvn -B clean install'
+                    // or separate:
+                    // sh 'mvn -B clean test'
                 }
             }
         }
