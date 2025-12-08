@@ -1,31 +1,52 @@
 pipeline {
-    agent any   // Jenkins runs in jenkins-root container
+    agent any
 
     stages {
-        stage('Build & Archive (Maven in Docker)') {
+
+        /* -------------------- BUILD -------------------- */
+        stage('Build') {
             agent {
                 docker {
-                    // Maven + JDK 21 image
                     image 'maven:3.9.6-eclipse-temurin-21'
-                    // Optional: cache dependencies
-                    // args '-v /var/jenkins_home/.m2:/root/.m2'
                 }
             }
             steps {
-                echo "Building & archiving with Maven (JDK 21) inside Docker"
-
                 dir('loan') {
-                    // Force Java 21 instead of 24
-                    sh 'mvn -B -Dmaven.compiler.release=21 clean install'
+                    echo "Building project..."
+                    sh 'mvn -B -Dmaven.compiler.release=21 -DskipTests clean install'
+                }
+            }
+        }
 
-                    // DEBUG (optional, just to see what is there)
-                    sh 'ls -R'
+        /* -------------------- TEST -------------------- */
+        stage('Test') {
+            agent {
+                docker {
+                    image 'maven:3.9.6-eclipse-temurin-21'
+                }
+            }
+            steps {
+                dir('loan') {
+                    echo "Running tests..."
+                    sh 'mvn test'
 
-                    // Archive jar while target/ definitely exists in this workspace
+                    // Publish JUnit reports
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        /* -------------------- ARCHIVE -------------------- */
+        stage('Archive') {
+            agent any
+            steps {
+                dir('loan') {
+                    echo "Archiving JAR..."
                     archiveArtifacts artifacts: 'target/*.jar'
                 }
             }
         }
+
     }
 
     post {
