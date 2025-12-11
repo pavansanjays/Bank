@@ -38,6 +38,7 @@ pipeline {
 
         /* -------------------- ARCHIVE -------------------- */
         stage('Archive') {
+            agent any
             steps {
                 dir('loan') {
                     echo "Archiving JAR..."
