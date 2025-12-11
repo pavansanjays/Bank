@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
-@RequestMapping("/OneBank")
+@RequestMapping("/onebank")
 public class StaffController {
 
     @Autowired
@@ -25,6 +25,6 @@ public class StaffController {
         {
             httpSession.setAttribute("staff",staffEntity);
         }
-        return "redirect:/OneBank";
+        return "redirect:/onebank";
     }
 }
