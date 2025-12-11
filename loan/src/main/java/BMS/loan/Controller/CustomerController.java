@@ -12,7 +12,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("/OneBank")
+@RequestMapping("/onebank")
 public class CustomerController {
 
     @Autowired
@@ -47,7 +47,7 @@ public class CustomerController {
         customerService.registerCustomer(customerEntity);
 
         httpSession.setAttribute("customer",customerEntity);
-        return "redirect:/OneBank";
+        return "redirect:/onebank";
     }
 
     @GetMapping("/getProfile/{id}")
@@ -68,7 +68,7 @@ public class CustomerController {
             model.addAttribute("customerEntity",customerEntity);
             return "CustomerUI/updateProfile";
         }
-        return "redirect:/OneBank";
+        return "redirect:/onebank";
     }
 
     @PostMapping("/updateProfile")
@@ -79,7 +79,7 @@ public class CustomerController {
         {
             customerService.registerCustomer(customerEntity);
             httpSession.setAttribute("customerEntity",customerEntity);
-            return "redirect:/OneBank";
+            return "redirect:/onebank";
         }
         return "CustomerUI/updateProfile";
     }
@@ -88,7 +88,7 @@ public class CustomerController {
     public String logout(HttpSession httpSession)
     {
         httpSession.invalidate();
-        return "redirect:/OneBank";
+        return "redirect:/onebank";
     }
 
 }
