@@ -11,7 +11,7 @@ pipeline {
                 }
             }
             steps {
-                dir('loan') {
+                dir('loan') {   // <-- put folder if your pom.xml is inside loan
                     echo "Building project..."
                     sh 'mvn -B -Dmaven.compiler.release=21 -DskipTests clean install'
                 }
@@ -38,12 +38,29 @@ pipeline {
 
         /* -------------------- ARCHIVE -------------------- */
         stage('Archive') {
-            agent any
             steps {
                 dir('loan') {
                     echo "Archiving JAR..."
                     archiveArtifacts artifacts: 'target/*.jar'
                 }
+            }
+        }
+
+        /* -------------------- DEPLOY TO RENDER -------------------- */
+        stage('Deploy to Render') {
+            environment {
+                RENDER_API_KEY = credentials('RENDER_API_KEY')    // your secret in Jenkins
+                RENDER_SERVICE_ID = 'srv-d4tcsh1r0fns73dbgrmg'            // <-- PUT YOUR SERVICE ID HERE
+            }
+            steps {
+                echo "Triggering Render deploy..."
+
+                sh """
+                  curl -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
+                    -H "Authorization: Bearer ${RENDER_API_KEY}" \
+                    -H "Content-Type: application/json" \
+                    -d '{}'
+                """
             }
         }
 

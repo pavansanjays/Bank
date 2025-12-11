@@ -1,74 +1,13 @@
-pipeline {
-    agent any
+# ---- Build Stage ----
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn -B -DskipTests package
 
-    stages {
-
-        /* -------------------- BUILD -------------------- */
-        stage('Build') {
-            agent {
-                docker {
-                    image 'maven:3.9.6-eclipse-temurin-21'
-                }
-            }
-            steps {
-                dir('loan') {   // <-- put folder if your pom.xml is inside loan
-                    echo "Building project..."
-                    sh 'mvn -B -Dmaven.compiler.release=21 -DskipTests clean install'
-                }
-            }
-        }
-
-        /* -------------------- TEST -------------------- */
-        stage('Test') {
-            agent {
-                docker {
-                    image 'maven:3.9.6-eclipse-temurin-21'
-                }
-            }
-            steps {
-                dir('loan') {
-                    echo "Running tests..."
-                    sh 'mvn test'
-
-                    // Publish JUnit reports
-                    junit 'target/surefire-reports/*.xml'
-                }
-            }
-        }
-
-        /* -------------------- ARCHIVE -------------------- */
-        stage('Archive') {
-            steps {
-                dir('loan') {
-                    echo "Archiving JAR..."
-                    archiveArtifacts artifacts: 'target/*.jar'
-                }
-            }
-        }
-
-        /* -------------------- DEPLOY TO RENDER -------------------- */
-        stage('Deploy to Render') {
-            environment {
-                RENDER_API_KEY = credentials('RENDER_API_KEY')    // your secret in Jenkins
-                RENDER_SERVICE_ID = 'srv-d4tcsh1r0fns73dbgrmg'            // <-- PUT YOUR SERVICE ID HERE
-            }
-            steps {
-                echo "Triggering Render deploy..."
-
-                sh """
-                  curl -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
-                    -H "Authorization: Bearer ${RENDER_API_KEY}" \
-                    -H "Content-Type: application/json" \
-                    -d '{}'
-                """
-            }
-        }
-
-    }
-
-    post {
-        always {
-            echo "Pipeline completed"
-        }
-    }
-}
+# ---- Run Stage ----
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+ENV PORT=8080
+CMD ["sh", "-c", "java -Dserver.port=$PORT -jar app.jar"]
